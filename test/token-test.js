@@ -5,7 +5,7 @@ describe("Wager token tests", function () {
     it("Mint new tokens", async function () {
         const accounts = await ethers.getSigners();
 
-        const WagerToken = await hre.ethers.getContractFactory("WagerToken");
+        const WagerToken = await ethers.getContractFactory("WagerToken");
         const token = await WagerToken.deploy();
         await token.deployed();
 
