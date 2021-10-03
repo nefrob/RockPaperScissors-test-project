@@ -8,17 +8,20 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 contract RockPaperScissors {
     using SafeMath for uint256;
 
-    address public p1;
-    address public p2;
-    address public wager_token;
-    uint256 public wager_amount;
-
     enum Move {
         None,
         Rock,
         Paper,
         Scissors
     }
+
+    event SubmitMove(address indexed player, bytes32 indexed hash);
+    event RevealMove(address indexed player, Move move);
+
+    address public p1;
+    address public p2;
+    address public wager_token;
+    uint256 public wager_amount;
 
     Move public p1_move;
     bytes32 public p1_hashed_move;
@@ -72,6 +75,8 @@ contract RockPaperScissors {
         }
 
         IERC20(wager_token).transferFrom(msg.sender, address(this), amount);
+
+        emit SubmitMove(msg.sender, hashed_move);
     }
 
     function revealMove(Move move, uint128 iv) public {
@@ -96,6 +101,8 @@ contract RockPaperScissors {
 
             p1_move = move;
 
+            emit RevealMove(msg.sender, move);
+
             if (p2_move != Move.None) {
                 payoutWager();
             }
@@ -110,6 +117,8 @@ contract RockPaperScissors {
             );
 
             p2_move = move;
+
+            emit RevealMove(msg.sender, move);
 
             if (p1_move != Move.None) {
                 payoutWager();
