@@ -74,12 +74,15 @@ contract RockPaperScissors {
         IERC20(wager_token).transferFrom(msg.sender, address(this), amount);
     }
 
-    function revealMove(Move move, uint32 iv) public {
+    function revealMove(Move move, uint128 iv) public {
         require(
             msg.sender == p1 || msg.sender == p2,
             "revealMove: invalid sender."
         );
-        require(move != Move.None, "revealMove: invalid move.");
+        require(
+            move == Move.Rock || move == Move.Paper || move == Move.Scissors,
+            "revealMove: invalid move."
+        );
 
         if (msg.sender == p1) {
             require(
@@ -90,7 +93,12 @@ contract RockPaperScissors {
                 sha256(abi.encodePacked(move, iv)) == p1_hashed_move,
                 "revealMove: move does not match hash."
             );
+
             p1_move = move;
+
+            if (p2_move != Move.None) {
+                payoutWager();
+            }
         } else {
             require(
                 p2_move == Move.None,
@@ -100,14 +108,19 @@ contract RockPaperScissors {
                 sha256(abi.encodePacked(move, iv)) == p2_hashed_move,
                 "revealMove: move does not match hash."
             );
+
             p2_move = move;
+
+            if (p1_move != Move.None) {
+                payoutWager();
+            }
         }
     }
 
-    function getWinner() external returns (address winner) {
+    function getWinner() public view returns (address winner) {
         require(
             p1_move != Move.None && p2_move != Move.None,
-            "getWinner: both players did not reveal their moves."
+            "getWinner: moves not revealed."
         );
 
         if (
@@ -115,19 +128,27 @@ contract RockPaperScissors {
             (p1_move == Move.Paper && p2_move == Move.Rock) ||
             (p1_move == Move.Scissors && p2_move == Move.Paper)
         ) {
-            IERC20(wager_token).transfer(p1, wager_amount.mul(2));
             return p1;
         } else if (
             (p2_move == Move.Rock && p1_move == Move.Scissors) ||
             (p2_move == Move.Paper && p1_move == Move.Rock) ||
             (p2_move == Move.Scissors && p1_move == Move.Paper)
         ) {
-            IERC20(wager_token).transfer(p2, wager_amount.mul(2));
             return p2;
         }
 
-        IERC20(wager_token).transfer(p1, wager_amount);
-        IERC20(wager_token).transfer(p2, wager_amount);
         return address(0);
+    }
+
+    function payoutWager() private {
+        address winner = getWinner();
+        if (winner == p1) {
+            IERC20(wager_token).transfer(p1, wager_amount.mul(2));
+        } else if (winner == p2) {
+            IERC20(wager_token).transfer(p2, wager_amount.mul(2));
+        } else {
+            IERC20(wager_token).transfer(p1, wager_amount);
+            IERC20(wager_token).transfer(p2, wager_amount);
+        }
     }
 }
