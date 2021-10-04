@@ -7,7 +7,9 @@ This project implements a simple smart contract named `RockPaperScissors` that a
 -   Once both players have submitted a move (up to them to know so), moves can be revealed by submitting the hash inverse (move & secret).
 -   On reveal of the second move the winner is determined and the wager from both players is given to the winner. On draw the wager is returned to both players.
 
-### Tests
+### Setup & Tests
+
+Install dependencies via: `npm install`.
 
 Run the tests via: `npx hardhat test`.
 
